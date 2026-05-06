@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvestIQ — AI Content Generator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090d;
+    --surface: #0d1117;
+    --surface2: #131920;
+    --surface3: #1a2330;
+    --border: #1e2d3d;
+    --border2: #253545;
+    --accent: #00d4ff;
+    --accent-dim: rgba(0,212,255,0.12);
+    --green: #00e87a;
+    --green-dim: rgba(0,232,122,0.1);
+    --gold: #f5c842;
+    --gold-dim: rgba(245,200,66,0.1);
+    --red: #ff4d6d;
+    --text: #dde8f0;
+    --text2: #6e8fa8;
+    --text3: #384f62;
+    --syne: 'Syne', sans-serif;
+    --mono: 'Space Mono', monospace;
+    --serif: 'Crimson Pro', serif;
+  }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: var(–syne);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Ambient background */
+.bg-glow {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 0;
+background:
+radial-gradient(ellipse 70% 40% at 15% 0%, rgba(0,212,255,0.07) 0%, transparent 60%),
+radial-gradient(ellipse 50% 35% at 85% 100%, rgba(0,232,122,0.05) 0%, transparent 60%),
+radial-gradient(ellipse 40% 50% at 50% 50%, rgba(245,200,66,0.02) 0%, transparent 60%);
+}
+
+/* Grid lines */
+.bg-grid {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 0;
+background-image:
+linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+background-size: 48px 48px;
+}
+
+.wrap {
+position: relative;
+z-index: 2;
+max-width: 1140px;
+margin: 0 auto;
+padding: 0 20px 80px;
+}
+
+/* ── HEADER ── */
+header {
+padding: 36px 0 28px;
+border-bottom: 1px solid var(–border);
+margin-bottom: 28px;
+animation: fadeDown 0.7s ease both;
+}
+
+.header-row {
+display: flex;
+align-items: flex-end;
+justify-content: space-between;
+gap: 20px;
+flex-wrap: wrap;
+}
+
+.brand-tag {
+font-family: var(–mono);
+font-size: 10px;
+letter-spacing: 3px;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 6px;
+opacity: 0.8;
+}
+
+.brand-name {
+font-family: var(–syne);
+font-size: clamp(36px, 6vw, 60px);
+font-weight: 800;
+letter-spacing: -1.5px;
+line-height: 1;
+color: var(–text);
+}
+
+.brand-name .iq { color: var(–accent); }
+
+.brand-desc {
+font-family: var(–serif);
+font-size: 15px;
+font-style: italic;
+color: var(–text2);
+margin-top: 8px;
+}
+
+.header-badges {
+display: flex;
+flex-direction: column;
+gap: 8px;
+align-items: flex-end;
+}
+
+.badge {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 7px 14px;
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2px;
+text-transform: uppercase;
+}
+
+.badge-live {
+background: var(–green-dim);
+border: 1px solid rgba(0,232,122,0.25);
+color: var(–green);
+}
+
+.badge-safe {
+background: var(–gold-dim);
+border: 1px solid rgba(245,200,66,0.25);
+color: var(–gold);
+}
+
+.live-dot {
+width: 6px; height: 6px;
+border-radius: 50%;
+background: var(–green);
+animation: pulse 2s ease-in-out infinite;
+flex-shrink: 0;
+}
+
+@keyframes pulse {
+0%,100% { opacity:1; transform:scale(1); }
+50% { opacity:0.3; transform:scale(0.6); }
+}
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+border: 1px solid rgba(245,200,66,0.2);
+border-left: 3px solid var(–gold);
+background: var(–gold-dim);
+padding: 10px 16px;
+font-family: var(–mono);
+font-size: 10px;
+color: var(–gold);
+letter-spacing: 0.5px;
+line-height: 1.7;
+margin-bottom: 28px;
+animation: fadeDown 0.7s 0.1s ease both;
+}
+
+/* ── LAYOUT ── */
+.layout {
+display: grid;
+grid-template-columns: 300px 1fr;
+gap: 16px;
+align-items: start;
+}
+
+@media (max-width: 820px) {
+.layout { grid-template-columns: 1fr; }
+.header-badges { align-items: flex-start; flex-direction: row; }
+}
+
+/* ── CARD ── */
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+overflow: hidden;
+}
+
+.card-head {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 13px 18px;
+border-bottom: 1px solid var(–border);
+background: var(–surface2);
+}
+
+.card-head-title {
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2.5px;
+text-transform: uppercase;
+color: var(–text2);
+}
+
+.card-body { padding: 18px; }
+
+/* ── CONTROLS ── */
+.ctrl-label {
+display: block;
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text3);
+margin-bottom: 9px;
+}
+
+.ctrl-group { margin-bottom: 22px; }
+
+/* Format buttons */
+.fmt-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 6px;
+}
+
+.fmt-btn {
+padding: 11px 8px;
+background: var(–surface2);
+border: 1px solid var(–border);
+cursor: pointer;
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 1.5px;
+color: var(–text2);
+text-transform: uppercase;
+text-align: center;
+transition: all 0.15s;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+}
+
+.fmt-btn .fi { font-size: 18px; }
+.fmt-btn:hover { border-color: var(–accent); color: var(–accent); }
+.fmt-btn.on { border-color: var(–accent); background: var(–accent-dim); color: var(–accent); }
+
+/* Topic chips */
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.chip {
+padding: 5px 9px;
+background: var(–surface2);
+border: 1px solid var(–border);
+cursor: pointer;
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 1px;
+color: var(–text2);
+text-transform: uppercase;
+transition: all 0.15s;
+user-select: none;
+}
+
+.chip:hover { border-color: var(–green); color: var(–green); }
+.chip.on { border-color: var(–green); background: var(–green-dim); color: var(–green); }
+
+/* Tone select */
+.tone-sel {
+width: 100%;
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–text);
+padding: 10px 12px;
+font-family: var(–mono);
+font-size: 10px;
+cursor: pointer;
+appearance: none;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘10’ height=‘6’ viewBox=‘0 0 10 6’%3E%3Cpath d=‘M0 0l5 6 5-6z’ fill=’%236e8fa8’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 12px center;
+}
+
+.tone-sel:focus { outline: 1px solid var(–accent); }
+
+/* Custom input */
+.custom-in {
+width: 100%;
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–text);
+padding: 10px 12px;
+font-family: var(–serif);
+font-size: 13px;
+resize: none;
+height: 72px;
+line-height: 1.5;
+transition: border-color 0.15s;
+}
+
+.custom-in::placeholder { color: var(–text3); font-style: italic; }
+.custom-in:focus { outline: none; border-color: var(–accent); }
+
+/* Generate button */
+.gen-btn {
+width: 100%;
+padding: 16px;
+background: var(–accent);
+border: none;
+color: #050a0e;
+font-family: var(–syne);
+font-size: 14px;
+font-weight: 800;
+letter-spacing: 0.5px;
+cursor: pointer;
+text-transform: uppercase;
+transition: all 0.2s;
+position: relative;
+overflow: hidden;
+}
+
+.gen-btn:hover:not(:disabled) { background: #22dbff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+.gen-btn:active:not(:disabled) { transform: translateY(0); }
+.gen-btn:disabled { background: var(–surface3); color: var(–text3); cursor: not-allowed; }
+
+/* shimmer */
+.gen-btn::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+transform: translateX(-100%);
+transition: transform 0.5s;
+}
+.gen-btn:hover:not(:disabled)::after { transform: translateX(100%); }
+
+/* ── OUTPUT CARD ── */
+.out-card { animation: fadeUp 0.5s 0.15s ease both; }
+
+/* Tabs */
+.tabs {
+display: flex;
+border-bottom: 1px solid var(–border);
+background: var(–surface2);
+}
+
+.tab {
+padding: 13px 18px;
+background: none;
+border: none;
+border-bottom: 2px solid transparent;
+cursor: pointer;
+font-family: var(–mono);
+font-size: 9px;
+letter-spacing: 2px;
+color: var(–text3);
+text-transform: uppercase;
+margin-bottom: -1px;
+transition: all 0.15s;
+}
+
+.tab:hover { color: var(–text2); }
+.tab.on { color: var(–accent); border-bottom-color: var(–accent); }
+
+/* Output area */
+.out-area { padding: 24px; min-height: 520px; }
+
+/* Empty */
+.empty {
+display: flex; flex-direction: column; align-items: center;
+justify-content: center; height: 420px; text-align: center; gap: 14px;
+}
+
+.empty-icon { font-size: 52px; opacity: 0.2; }
+
+.empty-h {
+font-family: var(–syne);
+font-size: 17px;
+font-weight: 700;
+color: var(–text2);
+}
+
+.empty-p {
+font-family: var(–serif);
+font-style: italic;
+color: var(–text3);
+font-size: 14px;
+max-width: 280px;
+line-height: 1.6;
+}
+
+/* Loading */
+.loading {
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+height: 420px;
+gap: 22px;
+}
+
+.spin-ring {
+width: 44px; height: 44px;
+border: 2px solid var(–border2);
+border-top-color: var(–accent);
+border-radius: 50%;
+animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-txt {
+font-family: var(–mono);
+font-size: 11px;
+letter-spacing: 2px;
+color: var(–text2);
+text-align: center;
+line-height: 2.2;
+}
+
+.loading-step {
+font-size: 9px;
+color: var(–accent);
+animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* Result */
+.result { display: none; animation: fadeIn 0.4s ease both; }
+
+/* News pills */
+.news-row {
+display: flex; flex-wrap: wrap; gap: 7px;
+margin-bottom: 18px;
+}
+
+.news-pill {
+display: flex; align-items: center; gap: 6px;
+padding: 5px 11px;
+background: var(–surface2);
+border: 1px solid var(–border);
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 1px;
+color: var(–text2);
+text-transform: uppercase;
+}
+
+.ndot { width: 5px; height: 5px; border-radius: 50%; background: var(–accent); flex-shrink: 0; }
+
+/* Post block */
+.post-block {
+background: var(–surface2);
+border: 1px solid var(–border);
+overflow: hidden;
+}
+
+.post-block-head {
+display: flex; align-items: center; justify-content: space-between;
+padding: 10px 14px;
+border-bottom: 1px solid var(–border);
+}
+
+.post-type-tag {
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 2px;
+color: var(–accent);
+text-transform: uppercase;
+}
+
+.btn-row { display: flex; gap: 6px; }
+
+.act-btn {
+padding: 4px 10px;
+background: none;
+border: 1px solid var(–border2);
+cursor: pointer;
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 1px;
+color: var(–text2);
+text-transform: uppercase;
+transition: all 0.15s;
+}
+
+.act-btn:hover { border-color: var(–accent); color: var(–accent); }
+.act-btn.copied { border-color: var(–green); color: var(–green); }
+
+.post-block-body { padding: 18px; }
+
+.field-lbl {
+font-family: var(–mono);
+font-size: 7px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text3);
+margin-bottom: 6px;
+}
+
+.hook-txt {
+font-family: var(–syne);
+font-size: 17px;
+font-weight: 700;
+line-height: 1.3;
+border-left: 2px solid var(–accent);
+padding-left: 12px;
+color: var(–text);
+margin-bottom: 16px;
+}
+
+.body-txt {
+font-family: var(–serif);
+font-size: 14px;
+line-height: 1.85;
+color: #b8ccdc;
+white-space: pre-wrap;
+margin-bottom: 14px;
+}
+
+.tags-txt {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–green);
+line-height: 1.7;
+border-top: 1px dashed var(–border);
+padding-top: 12px;
+margin-bottom: 12px;
+}
+
+.cta-bar {
+background: var(–accent-dim);
+border: 1px solid rgba(0,212,255,0.15);
+padding: 10px 14px;
+font-family: var(–mono);
+font-size: 9px;
+color: var(–accent);
+letter-spacing: 1px;
+}
+
+.legal-note {
+margin-top: 10px;
+font-family: var(–mono);
+font-size: 8px;
+color: var(–text3);
+letter-spacing: 1px;
+text-align: right;
+}
+
+/* ── ETF TAB ── */
+.etf-intro {
+font-family: var(–serif);
+font-size: 15px;
+color: var(–text2);
+line-height: 1.8;
+margin-bottom: 16px;
+}
+
+.etf-intro strong { color: var(–accent); font-style: normal; }
+
+.advantage-box {
+background: var(–accent-dim);
+border: 1px solid rgba(0,212,255,0.15);
+padding: 14px 18px;
+margin-bottom: 22px;
+}
+
+.advantage-box-title {
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 2px;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+
+.advantage-box-body {
+font-family: var(–serif);
+font-size: 13px;
+color: var(–text2);
+line-height: 2.1;
+}
+
+.etf-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+margin-bottom: 16px;
+}
+
+@media (max-width: 500px) { .etf-grid { grid-template-columns: 1fr; } }
+
+.etf-card {
+background: var(–surface2);
+border: 1px solid var(–border);
+padding: 14px;
+transition: border-color 0.15s;
+}
+
+.etf-card:hover { border-color: var(–border2); }
+
+.etf-ticker {
+font-family: var(–syne);
+font-size: 15px;
+font-weight: 700;
+color: var(–accent);
+margin-bottom: 2px;
+}
+
+.etf-eg {
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 1px;
+color: var(–text3);
+margin-bottom: 8px;
+}
+
+.etf-desc {
+font-family: var(–serif);
+font-size: 12px;
+color: var(–text2);
+line-height: 1.6;
+margin-bottom: 8px;
+}
+
+.etf-adv {
+font-family: var(–mono);
+font-size: 8px;
+color: var(–green);
+letter-spacing: 0.5px;
+}
+
+/* ── HISTORY TAB ── */
+.hist-item {
+border-bottom: 1px solid var(–border);
+padding: 13px 0;
+cursor: pointer;
+transition: padding-left 0.15s;
+}
+
+.hist-item:last-child { border-bottom: none; }
+.hist-item:hover { padding-left: 8px; }
+
+.hist-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+
+.hist-type {
+font-family: var(–mono);
+font-size: 8px;
+letter-spacing: 2px;
+color: var(–accent);
+text-transform: uppercase;
+}
+
+.hist-time {
+font-family: var(–mono);
+font-size: 8px;
+color: var(–text3);
+letter-spacing: 1px;
+}
+
+.hist-hook {
+font-family: var(–syne);
+font-size: 13px;
+font-weight: 600;
+color: var(–text2);
+line-height: 1.3;
+}
+
+.hist-empty {
+text-align: center;
+padding: 60px 0;
+font-family: var(–serif);
+font-style: italic;
+color: var(–text3);
+font-size: 14px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeDown {
+from { opacity:0; transform:translateY(-10px); }
+to { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeUp {
+from { opacity:0; transform:translateY(10px); }
+to { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.ctrl-card { animation: fadeUp 0.5s 0.1s ease both; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(–surface); }
+::-webkit-scrollbar-thumb { background: var(–border2); border-radius: 2px; }
+</style>
+
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="bg-grid"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+
+  <header>
+    <div class="header-row">
+      <div>
+        <div class="brand-tag">// AI Content Studio v2.0</div>
+        <div class="brand-name">Invest<span class="iq">IQ</span></div>
+        <div class="brand-desc">AI-powered investing content — always current, never advice</div>
+      </div>
+      <div class="header-badges">
+        <div class="badge badge-live"><div class="live-dot"></div>Live Web Search Active</div>
+        <div class="badge badge-safe">⚠ Educational Use Only</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- DISCLAIMER -->
+
+  <div class="disclaimer">
+    ⚠ LEGAL DISCLAIMER — All content produced by this tool is for educational and informational purposes only. Nothing here constitutes financial advice, investment recommendations, or solicitation to buy or sell any security or financial instrument. Past performance is not indicative of future results. Always consult a qualified independent financial adviser before making investment decisions.
+  </div>
+
+  <!-- MAIN LAYOUT -->
+
+  <div class="layout">
+
+```
+<!-- LEFT: Controls -->
+<div class="card ctrl-card">
+  <div class="card-head">
+    <span>⚙</span>
+    <span class="card-head-title">Content Controls</span>
+  </div>
+  <div class="card-body">
+
+    <!-- Format -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">Post Format</span>
+      <div class="fmt-grid">
+        <div class="fmt-btn on" data-fmt="caption" onclick="setFmt('caption',this)">
+          <span class="fi">📸</span>Static Post
+        </div>
+        <div class="fmt-btn" data-fmt="reel" onclick="setFmt('reel',this)">
+          <span class="fi">🎬</span>Reel Script
+        </div>
+        <div class="fmt-btn" data-fmt="carousel" onclick="setFmt('carousel',this)">
+          <span class="fi">🗂</span>Carousel
+        </div>
+        <div class="fmt-btn" data-fmt="thread" onclick="setFmt('thread',this)">
+          <span class="fi">📱</span>Story Series
+        </div>
+      </div>
+    </div>
+
+    <!-- Topics -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">Topic Focus (pick multiple)</span>
+      <div class="chips">
+        <div class="chip on" data-t="market news and current market trends">📰 Market News</div>
+        <div class="chip" data-t="upcoming IPOs and new stock listings in 2025 and 2026">🚀 IPOs</div>
+        <div class="chip" data-t="ETFs exchange-traded funds their advantages and how they work">📊 ETFs</div>
+        <div class="chip" data-t="global economic events and geopolitical news affecting financial markets">🌍 World Events</div>
+        <div class="chip" data-t="investing basics and tips for beginners">🎓 Beginners</div>
+        <div class="chip" data-t="compound interest and long-term wealth building strategies">💰 Compounding</div>
+        <div class="chip" data-t="stock market psychology and investor behaviour and emotions">🧠 Psychology</div>
+        <div class="chip" data-t="dividend investing and passive income from stocks">💵 Dividends</div>
+      </div>
+    </div>
+
+    <!-- Tone -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">Content Tone</span>
+      <select class="tone-sel" id="toneEl">
+        <option value="educational and engaging">📚 Educational & Engaging</option>
+        <option value="bold and provocative with strong hooks">🔥 Bold & Provocative</option>
+        <option value="calm reassuring and balanced">😌 Calm & Reassuring</option>
+        <option value="data-driven and analytical with specific numbers">📈 Data-Driven</option>
+        <option value="conversational and relatable like talking to a friend">💬 Conversational</option>
+        <option value="motivational and inspiring for long-term wealth building">⚡ Motivational</option>
+      </select>
+    </div>
+
+    <!-- Custom -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">Custom Focus (optional)</span>
+      <textarea class="custom-in" id="customEl" placeholder="e.g. 'focus on how rising interest rates affect ETF performance'…"></textarea>
+    </div>
+
+    <!-- Button -->
+    <button class="gen-btn" id="genBtn" onclick="generate()">
+      ⚡ Generate Content
+    </button>
+
+  </div>
+</div>
+
+<!-- RIGHT: Output -->
+<div class="card out-card">
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('output',this)">Generated</button>
+    <button class="tab" onclick="switchTab('etf',this)">ETF Guide</button>
+    <button class="tab" onclick="switchTab('history',this)">History</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="out-area" id="tab-output">
+    <div class="empty" id="emptyEl">
+      <div class="empty-icon">📡</div>
+      <div class="empty-h">Ready to Generate</div>
+      <div class="empty-p">Pick your format and topics, then hit Generate. Content is written using live web search data.</div>
+    </div>
+    <div class="loading" id="loadingEl">
+      <div class="spin-ring"></div>
+      <div class="loading-txt">
+        Scanning live market data<br>
+        <span class="loading-step" id="stepEl">→ Initialising…</span>
+      </div>
+    </div>
+    <div class="result" id="resultEl"></div>
+  </div>
+
+  <!-- ETF GUIDE -->
+  <div class="out-area" id="tab-etf" style="display:none;">
+    <p class="etf-intro">
+      An <strong>Exchange-Traded Fund (ETF)</strong> is a basket of securities — stocks, bonds, or commodities — that trades on a stock exchange just like an individual share. One purchase = instant diversification across hundreds or thousands of companies.
+    </p>
+
+    <div class="advantage-box">
+      <div class="advantage-box-title">Why ETFs Are Powerful</div>
+      <div class="advantage-box-body">
+        ✦ <strong style="color:var(--text)">Instant diversification</strong> — one ETF can hold 500–9,000+ companies<br>
+        ✦ <strong style="color:var(--text)">Low fees</strong> — expense ratios often 0.03–0.20% vs 1–2% for active funds<br>
+        ✦ <strong style="color:var(--text)">Liquidity</strong> — buy or sell any time markets are open, unlike mutual funds<br>
+        ✦ <strong style="color:var(--text)">Transparency</strong> — holdings published daily, no hidden positions<br>
+        ✦ <strong style="color:var(--text)">Tax efficiency</strong> — fewer internal trades = fewer taxable events<br>
+        ✦ <strong style="color:var(--text)">Low minimums</strong> — start with as little as £1 on fractional platforms<br>
+        ✦ <strong style="color:var(--text)">Passive strategy</strong> — tracks an index, removes emotion from investing
+      </div>
+    </div>
+
+    <div class="field-lbl" style="margin-bottom:12px;">Popular ETF Categories</div>
+    <div class="etf-grid">
+      <div class="etf-card">
+        <div class="etf-ticker">S&P 500</div>
+        <div class="etf-eg">VUSD · CSPX · IVV · VOO</div>
+        <div class="etf-desc">Tracks the 500 largest US companies. The most popular starting point. ~10% avg annual return over 50 years.</div>
+        <div class="etf-adv">✦ Best historical long-term returns</div>
+      </div>
+      <div class="etf-card">
+        <div class="etf-ticker">Global All-World</div>
+        <div class="etf-eg">VWRP · SWDA · ACWI</div>
+        <div class="etf-desc">Covers 9,000+ companies across developed and emerging markets. True global exposure in one fund.</div>
+        <div class="etf-adv">✦ Maximum geographic diversification</div>
+      </div>
+      <div class="etf-card">
+        <div class="etf-ticker">Bond ETFs</div>
+        <div class="etf-eg">AGBP · IGLH · TLT · BND</div>
+        <div class="etf-desc">Government or corporate debt instruments. Lower risk, steady income. Portfolio ballast in volatile markets.</div>
+        <div class="etf-adv">✦ Reduces overall portfolio volatility</div>
+      </div>
+      <div class="etf-card">
+        <div class="etf-ticker">Thematic ETFs</div>
+        <div class="etf-eg">ROBO · IQQH · INRG · XAIX</div>
+        <div class="etf-desc">AI, clean energy, robotics, biotech. Higher risk, concentrated exposure to future growth sectors.</div>
+        <div class="etf-adv">✦ Targeted trend exposure</div>
+      </div>
+      <div class="etf-card">
+        <div class="etf-ticker">Dividend ETFs</div>
+        <div class="etf-eg">VHYL · IUSD · HDIV · DIVI</div>
+        <div class="etf-desc">Companies with high or consistently growing dividends. Regular income plus long-term capital growth.</div>
+        <div class="etf-adv">✦ Passive income + growth</div>
+      </div>
+      <div class="etf-card">
+        <div class="etf-ticker">Commodity ETFs</div>
+        <div class="etf-eg">SGLN · PHAU · WEAT · CMOD</div>
+        <div class="etf-desc">Gold, silver, oil, agriculture. Inflation hedge. Non-correlated to equities — zig when stocks zag.</div>
+        <div class="etf-adv">✦ Inflation protection</div>
+      </div>
+    </div>
+
+    <div class="advantage-box" style="background:var(--green-dim); border-color:rgba(0,232,122,0.2);">
+      <div class="advantage-box-title" style="color:var(--green)">ETF vs Individual Stocks — The Key Difference</div>
+      <div class="advantage-box-body">
+        <strong style="color:var(--text)">Individual stocks:</strong> Higher potential return, higher risk, requires research and monitoring.<br>
+        <strong style="color:var(--text)">ETFs:</strong> Built-in diversification, lower per-unit risk, minimal research needed.<br>
+        Most long-term investors use ETFs as the core of their portfolio, with individual stocks as optional satellites.
+      </div>
+    </div>
+    <div style="font-family:var(--mono); font-size:8px; color:var(--text3); letter-spacing:1px; margin-top:10px;">⚠ Educational information only — not financial advice</div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="out-area" id="tab-history" style="display:none;">
+    <div id="histEl">
+      <div class="hist-empty">No posts generated yet.<br>Generated content will appear here.</div>
+    </div>
+  </div>
+
+</div>
+```
+
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────
+  let fmt = 'caption';
+  let topics = ['market news and current market trends'];
+  let history = [];
+  let stepTimer = null;
+
+  const fmtLabels = {
+    caption: 'Static Post',
+    reel: 'Reel Script',
+    carousel: 'Carousel',
+    thread: 'Story Series'
+  };
+
+  const loadSteps = [
+    '→ Searching live market news…',
+    '→ Scanning for trending IPOs…',
+    '→ Analysing global events…',
+    '→ Checking ETF data…',
+    '→ Crafting your content…',
+    '→ Adding hashtags & hooks…'
+  ];
+
+  // ── Format ─────────────────────────────────────────────────────────────
+  function setFmt(f, el) {
+    fmt = f;
+    document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+  }
+
+  // ── Topics ─────────────────────────────────────────────────────────────
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const t = chip.dataset.t;
+      if (chip.classList.contains('on')) {
+        if (topics.length === 1) return; // keep at least one
+        chip.classList.remove('on');
+        topics = topics.filter(x => x !== t);
+      } else {
+        chip.classList.add('on');
+        topics.push(t);
+      }
+    });
+  });
+
+  // ── Tabs ───────────────────────────────────────────────────────────────
+  function switchTab(id, btn) {
+    ['output','etf','history'].forEach(t => {
+      document.getElementById('tab-'+t).style.display = t === id ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+
+  // ── Loading ────────────────────────────────────────────────────────────
+  function showLoading() {
+    document.getElementById('emptyEl').style.display = 'none';
+    document.getElementById('resultEl').style.display = 'none';
+    document.getElementById('loadingEl').style.display = 'flex';
+    let i = 0;
+    const stepEl = document.getElementById('stepEl');
+    stepEl.textContent = loadSteps[0];
+    stepTimer = setInterval(() => {
+      i = (i + 1) % loadSteps.length;
+      stepEl.textContent = loadSteps[i];
+    }, 1500);
+  }
+
+  function hideLoading() {
+    clearInterval(stepTimer);
+    document.getElementById('loadingEl').style.display = 'none';
+  }
+
+  // ── Copy ───────────────────────────────────────────────────────────────
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.classList.remove('copied'); btn.textContent = orig; }, 2000);
+    });
+  }
+
+  function esc(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Render output ──────────────────────────────────────────────────────
+  function renderResult(data, format) {
+    const now = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const fullText = [data.hook, data.body, data.hashtags].filter(Boolean).join('\n\n');
+
+    let html = '';
+
+    if (data.newsContext?.length) {
+      html += `<div class="news-row">`;
+      data.newsContext.forEach(n => {
+        html += `<div class="news-pill"><div class="ndot"></div>${esc(n)}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<div class="post-block">
+      <div class="post-block-head">
+        <span class="post-type-tag">⚡ ${fmtLabels[format]} — ${now}</span>
+        <div class="btn-row">
+          <button class="act-btn" id="copyAllBtn" onclick="copyText(${JSON.stringify(fullText)}, this)">Copy All</button>
+          <button class="act-btn" onclick="generate()">↻ Regen</button>
+        </div>
+      </div>
+      <div class="post-block-body">`;
+
+    if (data.hook) {
+      html += `<div class="field-lbl">Hook</div>
+               <div class="hook-txt">${esc(data.hook)}</div>`;
+    }
+
+    if (data.body) {
+      html += `<div class="field-lbl">${format === 'reel' ? 'Script' : format === 'carousel' ? 'Slide Outline' : format === 'thread' ? 'Story Screens' : 'Caption'}</div>
+               <div class="body-txt">${esc(data.body)}</div>`;
+    }
+
+    if (data.hashtags) {
+      html += `<div class="tags-txt">${esc(data.hashtags)}</div>`;
+    }
+
+    if (data.cta) {
+      html += `<div class="cta-bar">📣 CTA → ${esc(data.cta)}</div>`;
+    }
+
+    html += `</div></div>
+    <div class="legal-note">⚠ Educational content only — not financial advice</div>`;
+
+    const el = document.getElementById('resultEl');
+    el.innerHTML = html;
+    el.style.display = 'block';
+  }
+
+  // ── History ────────────────────────────────────────────────────────────
+  function addHistory(data, format) {
+    history.unshift({
+      data, format,
+      time: new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+    });
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('histEl');
+    if (!history.length) return;
+    el.innerHTML = history.map((item, i) => `
+      <div class="hist-item" onclick="restoreHistory(${i})">
+        <div class="hist-meta">
+          <span class="hist-type">${fmtLabels[item.format]}</span>
+          <span class="hist-time">${item.time}</span>
+        </div>
+        <div class="hist-hook">${esc((item.data.hook || 'Generated post').substring(0, 75))}${(item.data.hook||'').length > 75 ? '…' : ''}</div>
+      </div>`).join('');
+  }
+
+  function restoreHistory(i) {
+    const item = history[i];
+    switchTab('output', document.querySelector('.tab'));
+    renderResult(item.data, item.format);
+  }
+
+  // ── Generate ───────────────────────────────────────────────────────────
+  async function generate() {
+    const btn = document.getElementById('genBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating…';
+
+    // switch to output tab
+    switchTab('output', document.querySelector('.tab'));
+    showLoading();
+
+    const tone = document.getElementById('toneEl').value;
+    const custom = document.getElementById('customEl').value.trim();
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: fmt, topics, tone, custom })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Server error');
+      }
+
+      // Read SSE stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const msg = JSON.parse(line.slice(6));
+            if (msg.type === 'step') {
+              document.getElementById('stepEl').textContent = '→ ' + msg.text;
+            } else if (msg.type === 'result') {
+              hideLoading();
+              renderResult(msg.data, fmt);
+              addHistory(msg.data, fmt);
+            } else if (msg.type === 'error') {
+              throw new Error(msg.message);
+            }
+          } catch(e) {
+            if (e.message && !e.message.includes('JSON')) throw e;
+          }
+        }
+      }
+
+    } catch (err) {
+      hideLoading();
+      const el = document.getElementById('resultEl');
+      el.innerHTML = `<div style="padding:20px;font-family:var(--mono);font-size:11px;color:var(--red);border:1px solid rgba(255,77,109,0.2);background:rgba(255,77,109,0.04);">
+        ⚠ Generation failed.<br><br>
+        <span style="color:var(--text3);font-size:9px;">${esc(err.message)}</span>
+      </div>`;
+      el.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⚡ Generate Content';
+  }
+</script>
+
+</body>
+</html>
